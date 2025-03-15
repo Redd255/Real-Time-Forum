@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Welcome to the Forum</h1>
+
+    <h2>Make a Post</h2>
+    <form action="/" method="POST">
+        <input type="text" name="author" placeholder="Your Name" required><br>
+        <textarea name="content" placeholder="Write something..." required></textarea><br>
+        <button type="submit">Post</button>
+    </form>
+
+    <h2>Recent Posts</h2>
+    {{range .}}
+        <p><strong>{{.Author}}</strong>: {{.Content}}</p>
+    {{end}}
+</body>
+</html>

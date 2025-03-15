@@ -1,49 +1,46 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
-	"html/template"
+	server "forum/src"
 	"log"
 	"net/http"
+	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type User struct {
-	Name     string
-	Email    string
-	Password string
-}
+var db *sql.DB
+var err error
 
-func serveForm(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("register.html"))
-	tmpl.Execute(w, nil)
-	fmt.Println("hh")
-}
-
-func handleRegister(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
+func init() {
+	// open data base
+	db, err = sql.Open("sqlite3", "./my.db")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		return
+	// read tables
+	sqlFile, err := os.ReadFile("./src/tables.sql")
+	if err != nil {
+		log.Fatal("Error reading SQL file:", err)
 	}
 
-	user := User{
-		Name:     r.FormValue("name"),
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"), 
+	// execute tables
+	_, err = db.Exec(string(sqlFile))
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Printf("salam user: %+v\n", user)
-
-	fmt.Fprintf(w, "Registration Successful! Welcome, %s.", user.Name)
+	// send db to server file
+	server.SendDB(db)
 }
-
 func main() {
-	http.HandleFunc("/", serveForm)
-	http.HandleFunc("/register", handleRegister)
+	defer db.Close()
+	http.HandleFunc("/", server.HomePage)
+	http.HandleFunc("/register", server.HandleRegister)
+	http.HandleFunc("/login", server.HandleLogin)
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
