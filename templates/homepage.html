@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Home Page</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="profile-header">
+            <div class="avatar"></div>
+            <div>
+                <h3>{{.Username}}</h3>
+                <p>@{{.Username}}</p>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <h4>250</h4>
+                <p>Posts</p>
+            </div>
+            <div class="stat-item">
+                <h4>590</h4>
+                <p>Followers</p>
+            </div>
+            <div class="stat-item">
+                <h4>2022</h4>
+                <p>Following</p>
+            </div>
+        </div>
+
+        <a href="/profile" class="profile-button">My Profile</a>
+
+        <div class="sidebar-tags">
+            <div class="sidebar-tags-title">Filter by Tags</div>
+            <div class="sidebar-tags-list">
+                <a href="/homepage" {{if eq .ActiveTag "" }}class="active" {{end}}>All Posts</a>
+                {{range .Tags}}
+                <a href="/tag?id={{.ID}}" {{if eq $.ActiveTag (printf "%d" .ID)}}class="active" {{end}}>{{.Name}}</a>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    <header class="header">
+        <div class="header-left">
+            <h1>Forum</h1>
+            <div class="search-bar">
+                <input type="text" placeholder="Search">
+            </div>
+        </div>
+        <div class="header-right">
+            <nav class="nav-links">
+                <a href="/homepage" class="nav-link">Home</a>
+                <a href="/chat" class="nav-link">Chat</a>
+                <a href="/profile" class="nav-link">{{.Username}}</a>
+                <a href="/logout" class="nav-link">Logout</a>
+            </nav>
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="post-form">
+
+            <form method="POST" action="/homepage" enctype="multipart/form-data">
+
+                <textarea name="content" placeholder="What's on your mind?"></textarea>
+                <div class="image-upload">
+                    <label for="post-image">
+                        <p><strong>Add an image:</strong></p>
+                        <input type="file" id="post-image" name="image" accept="image/*">
+                        <div id="image-preview"></div>
+                    </label>
+                </div>
+
+                <div class="tag-selection">
+                    <p><strong>Select tags:</strong></p>
+                    {{range .Tags}}
+                    <label class="tag-label">
+                        <input type="checkbox" name="tags" value="{{.ID}}"> {{.Name}}
+                    </label>
+                    {{end}}
+                </div>
+
+                <button class="btn" type="submit">Create Post</button>
+            </form>
+        </div>
+
+        <div class="posts">
+            {{range .Posts}}
+            <div class="post" data-post-id="{{.ID}}">
+                <h3>{{.Username}}</h3>
+                <p>{{.Content}}</p>
+
+                {{if .ImagePath}}
+                <div class="post-image">
+                    <img src="/{{.ImagePath}}" alt="Post image">
+                </div>
+                {{end}}
+
+                <div class="post-tags">
+                    {{range .Tags}}
+                    <span class="post-tag">{{.}}</span>
+                    {{end}}
+                </div>
+
+                <div class="actions">
+                    <button class="like-btn" data-post-id="{{.ID}}">❤️ <span class="like-count">{{.Likes}}</span>
+                        Likes</button>
+                    <button class="toggle-comments-btn">💬 Comments</button>
+                </div>
+
+                <div class="comments">
+                    {{range .Comments}}
+                    <div class="comment" data-comment-id="{{.ID}}">
+                        <p>
+                            <strong>{{.Username}}:</strong> {{.Content}}
+                            <button class="comment-like-btn" data-comment-id="{{.ID}}">❤️ <span
+                                    class="comment-like-count">{{.Likes}}</span></button>
+                        </p>
+                    </div>
+                    {{end}}
+                    <form method="POST" action="/comment">
+                        <textarea name="content" placeholder="Add a comment..." required></textarea>
+                        <input type="hidden" name="post_id" value="{{.ID}}">
+                        <button type="submit">Comment</button>
+                    </form>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Handle post likes
+            document.querySelectorAll(".like-btn").forEach(button => {
+                button.addEventListener("click", async (e) => {
+                    const postID = button.dataset.postId;
+                    const likeCountSpan = button.querySelector(".like-count");
+                    const response = await fetch("/like", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `post_id=${postID}`,
+                    });
+                    if (response.ok) {
+                        const updatedLikes = await response.text();
+                        likeCountSpan.textContent = updatedLikes;
+                    }
+                });
+            });
+
+            //Handle post comments
+            document.querySelectorAll(".toggle-comments-btn").forEach(button => {
+                button.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    // wlaks up the dom tree to get the first elemnt with class post
+                    const comments = this.closest('.post').querySelector('.comments');
+                    //<div class="comments visible"> comments erea be visible
+                    comments.classList.toggle('visible');
+                    //<button class="toggle-comments-btn active">💬 Comments</button>
+                    this.classList.toggle('active');
+                });
+            });
+        })
+    </script>
+</body>
+
+</html>

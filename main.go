@@ -3,44 +3,57 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	server "forum/src"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	myserver "realtime/src"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
-var err error
-
 func init() {
-	// open data base
-	db, err = sql.Open("sqlite3", "./my.db")
+	os.MkdirAll("./uploads", os.ModePerm)
+	db, err := sql.Open("sqlite3", "./database/my.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// read tables
-	sqlFile, err := os.ReadFile("./src/tables.sql")
+	sqlfile, err := os.ReadFile("./database/my.sql")
 	if err != nil {
-		log.Fatal("Error reading SQL file:", err)
+		log.Fatal("Failed to read SQL file:", err)
 	}
 
-	// execute tables
-	_, err = db.Exec(string(sqlFile))
+	_, err = db.Exec(string(sqlfile))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to create users table:", err)
 	}
 
-	// send db to server file
-	server.SendDB(db)
+	defaultTags := []string{"Music", "Sports", "Technology", "Art", "Food", "Travel", "Fashion", "Health", "Education", "Gaming"}
+	for _, tagName := range defaultTags {
+		_, err = db.Exec("INSERT OR IGNORE INTO tags (name) VALUES (?)", tagName)
+		if err != nil {
+			log.Printf("Warning: Failed to insert default tag '%s': %v", tagName, err)
+		}
+	}
+	myserver.InitHandlers(db)
 }
 func main() {
-	defer db.Close()
-	http.HandleFunc("/", server.HomePage)
-	http.HandleFunc("/register", server.HandleRegister)
-	http.HandleFunc("/login", server.HandleLogin)
-	fmt.Println("Server started at http://localhost:8080")
+	staticDir := filepath.Join(".", "static")
+	uploadsDir := filepath.Join(".", "uploads")
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
+
+	http.HandleFunc("/", myserver.SignIn)
+	http.HandleFunc("/homepage", myserver.HomePage)
+	http.HandleFunc("/signup", myserver.SignUp)
+	http.HandleFunc("/logout", myserver.Logout)
+	
+	http.HandleFunc("/tag", myserver.FilterByTag)
+	http.HandleFunc("/like", myserver.AddLike)
+	http.HandleFunc("/comment", myserver.AddComment)
+	// http.HandleFunc("/like-comment", myserver.LikeComment)
+
+	fmt.Println("Server running at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
