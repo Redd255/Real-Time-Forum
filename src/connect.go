@@ -434,6 +434,6 @@ func AddLike(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("%d", likeCount)))
+		w.Write(fmt.Appendf(nil, "%d", likeCount))
 	}
 }
