@@ -228,7 +228,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 
 		content := r.FormValue("content")
 		if content == "" {
-			errorPage(w, "Post content cannot be empty", "homepage.html")
+			http.Redirect(w,r,"/homepage", http.StatusSeeOther)
 			return
 		}
 
@@ -435,5 +435,57 @@ func AddLike(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(fmt.Appendf(nil, "%d", likeCount))
+	}
+}
+
+func LikeComment(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var userID int
+	err = db.QueryRow("SELECT user_id FROM sessions WHERE session_id = ?", cookie.Value).Scan(&userID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+		commentID := r.FormValue("comment_id")
+
+		var exists bool
+		err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM comment_likes WHERE comment_id = ? AND user_id = ?)",
+			commentID, userID).Scan(&exists)
+		if err != nil {
+			log.Printf("Failed to check comment like existence: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		if exists {
+			_, err = db.Exec("DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?", commentID, userID)
+		} else {
+			_, err = db.Exec("INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)", commentID, userID)
+		}
+
+		if err != nil {
+			log.Printf("Failed to toggle comment like: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		var likeCount int
+		err = db.QueryRow("SELECT COUNT(*) FROM comment_likes WHERE comment_id = ?", commentID).Scan(&likeCount)
+		if err != nil {
+			log.Printf("Failed to get comment like count: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf("%d", likeCount)))
 	}
 }

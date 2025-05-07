@@ -82,14 +82,17 @@
                     {{end}}
                 </div>
 
-                <button class="btn" type="submit">Create Post</button>
+                <button class="btn" type="submit" id="submit-post-btn" disabled>Create Post</button>
             </form>
         </div>
 
         <div class="posts">
             {{range .Posts}}
             <div class="post" data-post-id="{{.ID}}">
-                <h3>{{.Username}}</h3>
+                <h3>
+                    {{.Username}}
+                    <a href="/chat?to={{.UserID}}" class="chat-button" style="margin-left: 10px;">💬 Chat</a>
+                </h3>
                 <p>{{.Content}}</p>
 
                 {{if .ImagePath}}
@@ -161,6 +164,41 @@
                     this.classList.toggle('active');
                 });
             });
+
+            // Handle comment likes
+            document.querySelectorAll(".comment-like-btn").forEach(button => {
+                button.addEventListener("click", async (e) => {
+                    e.preventDefault();
+                    const commentID = button.dataset.commentId;
+                    const likeCountSpan = button.querySelector(".comment-like-count");
+
+                    const response = await fetch("/like-comment", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `comment_id=${commentID}`,
+                    });
+
+                    if (response.ok) {
+                        const updatedLikes = await response.text();
+                        likeCountSpan.textContent = updatedLikes;
+                    }
+                });
+            });
+
+
+            const textarea = document.querySelector('textarea[name="content"]');
+            const tagCheckboxes = document.querySelectorAll('input[name="tags"]');
+            const submitButton = document.getElementById('submit-post-btn');
+            function updateButtonState() {
+                const hasText = textarea.value.trim().length > 0;
+                const hasTag = Array.from(tagCheckboxes).some(cb => cb.checked);
+                submitButton.disabled = !(hasText && hasTag);
+            }
+
+            textarea.addEventListener('input', updateButtonState);
+            tagCheckboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
+            updateButtonState();
+
         })
     </script>
 </body>

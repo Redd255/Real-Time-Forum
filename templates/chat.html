@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chat</title>
+	<style>
+		.messages { max-height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+	</style>
+</head>
+<body>
+	<h2>Chat</h2>
+	<div class="messages">
+		{{range .Messages}}
+			<p><strong>{{if eq .SenderID $.UserID}}You{{else}}Them{{end}}:</strong> {{.Content}} <em>{{.Timestamp}}</em></p>
+		{{end}}
+	</div>
+	<form method="POST" action="/send-message">
+		<input type="hidden" name="receiver_id" value="{{.ReceiverID}}">
+		<textarea name="content" placeholder="Type your message..."></textarea><br>
+		<button type="submit">Send</button>
+	</form>
+</body>
+</html>

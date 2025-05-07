@@ -48,11 +48,16 @@ func main() {
 	http.HandleFunc("/homepage", myserver.HomePage)
 	http.HandleFunc("/signup", myserver.SignUp)
 	http.HandleFunc("/logout", myserver.Logout)
-	
+
 	http.HandleFunc("/tag", myserver.FilterByTag)
 	http.HandleFunc("/like", myserver.AddLike)
 	http.HandleFunc("/comment", myserver.AddComment)
-	// http.HandleFunc("/like-comment", myserver.LikeComment)
+	http.HandleFunc("/like-comment", myserver.LikeComment)
+
+	// http.HandleFunc("/chat", myserver.Chat)
+	// http.HandleFunc("/ws", myserver.HandleWebSocket)
+	// http.HandleFunc("/chat-history", myserver.LoadChatHistory)
+	// http.HandleFunc("/unread-messages", myserver.GetUnreadMessages)
 
 	fmt.Println("Server running at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
