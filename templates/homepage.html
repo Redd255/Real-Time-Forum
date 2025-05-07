@@ -4,15 +4,18 @@
 <head>
     <title>Home Page</title>
     <link rel="stylesheet" href="/static/styles.css">
+
 </head>
 
 <body>
+
+    <!-- Left Sidebar -->
     <div class="sidebar">
         <div class="profile-header">
             <div class="avatar"></div>
             <div>
                 <h3>{{.Username}}</h3>
-                <p>@{{.Username}}</p>
+                <p>Welcome to the forum</p>
             </div>
         </div>
 
@@ -43,6 +46,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Header -->
     <header class="header">
         <div class="header-left">
             <h1>Forum</h1>
@@ -54,17 +59,44 @@
             <nav class="nav-links">
                 <a href="/homepage" class="nav-link">Home</a>
                 <a href="/chat" class="nav-link">Chat</a>
-                <a href="/profile" class="nav-link">{{.Username}}</a>
+                <a href="/profile" class="nav-link">Profile</a>
                 <a href="/logout" class="nav-link">Logout</a>
             </nav>
         </div>
     </header>
+
+    <!-- Right Chat Sidebar -->
+    <div class="chat-sidebar-home">
+        <div class="chat-logo">
+            <h1>Messenger</h1>
+        </div>
+        <div class="search-box">
+            <input type="text" placeholder="Search contacts...">
+        </div>
+        <div class="chat-contacts">
+            <h3>Conversations</h3>
+            <ul class="contacts-list">
+                {{range .Contacts}}
+                <li class="contact-item" data-userid="{{.ID}}">
+                    <div class="contact-avatar">{{.Initials}}</div>
+                    <div class="contact-info">
+                        <span class="contact-name">{{.Username}}</span>
+                        <span class="contact-status">Online</span>
+                    </div>
+                    <div class="status-dot"></div>
+                    <div class="unread-badge" id="unread-{{.ID}}">{{if gt .Unread 0}}{{.Unread}}{{end}}</div>
+                </li>
+                {{end}}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
     <div class="main-content">
         <div class="post-form">
-
             <form method="POST" action="/homepage" enctype="multipart/form-data">
-
                 <textarea name="content" placeholder="What's on your mind?"></textarea>
+
                 <div class="image-upload">
                     <label for="post-image">
                         <p><strong>Add an image:</strong></p>
@@ -82,17 +114,14 @@
                     {{end}}
                 </div>
 
-                <button class="btn" type="submit" id="submit-post-btn" disabled>Create Post</button>
+                <button class="btn" type="submit">Create Post</button>
             </form>
         </div>
 
         <div class="posts">
             {{range .Posts}}
             <div class="post" data-post-id="{{.ID}}">
-                <h3>
-                    {{.Username}}
-                    <a href="/chat?to={{.UserID}}" class="chat-button" style="margin-left: 10px;">💬 Chat</a>
-                </h3>
+                <h3>{{.Username}}</h3>
                 <p>{{.Content}}</p>
 
                 {{if .ImagePath}}
@@ -118,8 +147,9 @@
                     <div class="comment" data-comment-id="{{.ID}}">
                         <p>
                             <strong>{{.Username}}:</strong> {{.Content}}
-                            <button class="comment-like-btn" data-comment-id="{{.ID}}">❤️ <span
-                                    class="comment-like-count">{{.Likes}}</span></button>
+                            <button class="comment-like-btn" data-comment-id="{{.ID}}">❤️
+                                <span class="comment-like-count">{{.Likes}}</span>
+                            </button>
                         </p>
                     </div>
                     {{end}}
@@ -133,74 +163,8 @@
             {{end}}
         </div>
     </div>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Handle post likes
-            document.querySelectorAll(".like-btn").forEach(button => {
-                button.addEventListener("click", async (e) => {
-                    const postID = button.dataset.postId;
-                    const likeCountSpan = button.querySelector(".like-count");
-                    const response = await fetch("/like", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: `post_id=${postID}`,
-                    });
-                    if (response.ok) {
-                        const updatedLikes = await response.text();
-                        likeCountSpan.textContent = updatedLikes;
-                    }
-                });
-            });
 
-            //Handle post comments
-            document.querySelectorAll(".toggle-comments-btn").forEach(button => {
-                button.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    // wlaks up the dom tree to get the first elemnt with class post
-                    const comments = this.closest('.post').querySelector('.comments');
-                    //<div class="comments visible"> comments erea be visible
-                    comments.classList.toggle('visible');
-                    //<button class="toggle-comments-btn active">💬 Comments</button>
-                    this.classList.toggle('active');
-                });
-            });
-
-            // Handle comment likes
-            document.querySelectorAll(".comment-like-btn").forEach(button => {
-                button.addEventListener("click", async (e) => {
-                    e.preventDefault();
-                    const commentID = button.dataset.commentId;
-                    const likeCountSpan = button.querySelector(".comment-like-count");
-
-                    const response = await fetch("/like-comment", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: `comment_id=${commentID}`,
-                    });
-
-                    if (response.ok) {
-                        const updatedLikes = await response.text();
-                        likeCountSpan.textContent = updatedLikes;
-                    }
-                });
-            });
-
-
-            const textarea = document.querySelector('textarea[name="content"]');
-            const tagCheckboxes = document.querySelectorAll('input[name="tags"]');
-            const submitButton = document.getElementById('submit-post-btn');
-            function updateButtonState() {
-                const hasText = textarea.value.trim().length > 0;
-                const hasTag = Array.from(tagCheckboxes).some(cb => cb.checked);
-                submitButton.disabled = !(hasText && hasTag);
-            }
-
-            textarea.addEventListener('input', updateButtonState);
-            tagCheckboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
-            updateButtonState();
-
-        })
-    </script>
+    <script src="/static/js/homepage.js"></script>
 </body>
 
 </html>

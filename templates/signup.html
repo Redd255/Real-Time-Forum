@@ -10,60 +10,59 @@
 
 <body>
 
-    <body>
-        <div class="signup-form">
-            <h2>Create an Account</h2>
+    <div class="signup-form">
+        <h2>Create an Account</h2>
 
-            {{if .ErrorMessage}}
-            <div class="error-message">{{.ErrorMessage}}</div>
-            {{end}}
+        {{if .ErrorMessage}}
+        <div class="error-message">{{.ErrorMessage}}</div>
+        {{end}}
 
-            <form method="POST" action="/signup">
-                <div class="form-group">
-                    <label class="required" for="first_name">First Name</label>
-                    <input type="text" id="first_name" name="first_name" required>
-                </div>
+        <form method="POST" action="/signup">
+            <div class="form-group">
+                <label class="required" for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="required" for="last_name">Last Name</label>
-                    <input type="text" id="last_name" name="last_name" required>
-                </div>
+            <div class="form-group">
+                <label class="required" for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="required" for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
+            <div class="form-group">
+                <label class="required" for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="required" for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="required" for="age">Age</label>
-                    <input type="number" id="age" name="age" min="13" max="120" required>
-                </div>
+            <div class="form-group">
+                <label class="required" for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="required" for="gender">Gender</label>
-                    <select id="gender" name="gender" required>
-                        <option value="">Select...</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label class="required" for="age">Age</label>
+                <input type="number" id="age" name="age" min="13" max="120" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="required" for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
+            <div class="form-group">
+                <label class="required" for="gender">Gender</label>
+                <select id="gender" name="gender" required>
+                    <option value="">Select...</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
 
-                <button type="submit" class="btn">Sign Up</button>
-            </form>
+            <div class="form-group">
+                <label class="required" for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
 
-            <p>Already have an account? <a href="/signin">Sign In</a></p>
-        </div>
+            <button type="submit" class="btn">Sign Up</button>
+        </form>
 
-    </body>
+        <p>Already have an account? <a href="/signin">Sign In</a></p>
+    </div>
+
+</body>
 
 </html>

@@ -193,7 +193,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 // HomePage handles post creation and display
 func HomePage(w http.ResponseWriter, r *http.Request) {
-
 	//check user session
 	cookie, err := r.Cookie("session")
 	if err != nil {
@@ -214,8 +213,6 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
-
-	// Get username for the authenticated user
 	db.QueryRow("SELECT username FROM users WHERE id = ?", userID).Scan(&username)
 
 	// if user post
@@ -228,7 +225,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 
 		content := r.FormValue("content")
 		if content == "" {
-			http.Redirect(w,r,"/homepage", http.StatusSeeOther)
+			http.Redirect(w, r, "/homepage", http.StatusSeeOther)
 			return
 		}
 
@@ -335,17 +332,20 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	contact := GetAllConn(w, userID)
 
 	data := struct {
 		Username  string
 		Posts     []Post
 		Tags      []Tag
 		ActiveTag string
+		Contacts  []Contact
 	}{
 		Username:  username,
 		Posts:     posts,
 		Tags:      tags,
 		ActiveTag: tagFilter,
+		Contacts:  contact,
 	}
 
 	templates.ExecuteTemplate(w, "homepage.html", data)
@@ -488,4 +488,37 @@ func LikeComment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("%d", likeCount)))
 	}
+}
+
+func Chat(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	}
+
+	var currentUserID int
+	err = db.QueryRow("SELECT user_id FROM sessions WHERE session_id = ?", cookie.Value).Scan(&currentUserID)
+	if err != nil {
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	}
+
+	var currentUsername string
+	err = db.QueryRow("SELECT username FROM users WHERE id = ?", currentUserID).Scan(&currentUsername)
+	if err != nil {
+		log.Printf("Failed to get current user's username: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	contacts := GetAllConn(w, currentUserID)
+	data := struct {
+		Username string
+		Contacts []Contact
+	}{
+		Username: currentUsername,
+		Contacts: contacts,
+	}
+	templates.ExecuteTemplate(w, "chat.html", data)
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -125,4 +126,43 @@ func getPosts(tagFilter string) ([]Post, error) {
 	}
 
 	return posts, nil
+}
+
+func GetAllConn(w http.ResponseWriter, currentUserID int) []Contact {
+	// Get all other users with unread counts
+	rows, err := db.Query(`
+        SELECT u.id, u.username, 
+               (SELECT COUNT(*) FROM messages m WHERE m.sender_id = u.id AND m.recipient_id = ? AND m.is_read = FALSE) as unread_count
+        FROM users u
+        WHERE u.id != ?
+        ORDER BY u.username`, currentUserID, currentUserID)
+	if err != nil {
+		log.Printf("Failed to fetch users: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return nil
+	}
+	defer rows.Close()
+
+	var contacts []Contact
+	for rows.Next() {
+		var contact Contact
+		if err := rows.Scan(&contact.ID, &contact.Username, &contact.Unread); err != nil {
+			log.Printf("Error scanning user: %v", err)
+			continue
+		}
+		// avatar
+		initials := ""
+		words := strings.Fields(contact.Username)
+		for _, word := range words {
+			if len(word) > 0 {
+				initials += string(word[0])
+			}
+			if len(initials) >= 2 {
+				break
+			}
+		}
+		contact.Initials = strings.ToUpper(initials)
+		contacts = append(contacts, contact)
+	}
+	return contacts
 }

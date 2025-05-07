@@ -1,22 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Chat</title>
-	<style>
-		.messages { max-height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-	<h2>Chat</h2>
-	<div class="messages">
-		{{range .Messages}}
-			<p><strong>{{if eq .SenderID $.UserID}}You{{else}}Them{{end}}:</strong> {{.Content}} <em>{{.Timestamp}}</em></p>
-		{{end}}
-	</div>
-	<form method="POST" action="/send-message">
-		<input type="hidden" name="receiver_id" value="{{.ReceiverID}}">
-		<textarea name="content" placeholder="Type your message..."></textarea><br>
-		<button type="submit">Send</button>
-	</form>
+<header class="header">
+        <div class="header-left">
+            <h1>Forum</h1>
+            <div class="search-bar">
+                <input type="text" placeholder="Search">
+            </div>
+        </div>
+        <div class="header-right">
+            <nav class="nav-links">
+                <a href="/homepage" class="nav-link">Home</a>
+                <a href="/chat" class="nav-link">Chat</a>
+                <a href="/profile" class="nav-link">{{.Username}}</a>
+                <a href="/logout" class="nav-link">Logout</a>
+            </nav>
+        </div>
+    </header>
+    <div class="chat-container">
+        <div class="chat-sidebar">
+            <div class="chat-logo">
+                <h1>Messenger</h1>
+            </div>
+            <div class="search-box">
+                <input type="text" placeholder="Search contacts...">
+            </div>
+            <div class="chat-contacts">
+                <h3>Conversations</h3>
+                <ul class="contacts-list">
+                    {{range .Contacts}}
+                    <li class="contact-item" data-userid="{{.ID}}">
+                        <div class="contact-avatar">{{.Initials}}</div>
+                        <div class="contact-info">
+                            <span class="contact-name">{{.Username}}</span>
+                            <span class="contact-status">Online</span>
+                        </div>
+                        <div class="status-dot"></div>
+                        <div class="unread-badge" id="unread-{{.ID}}">{{if gt .Unread 0}}{{.Unread}}{{end}}</div>
+                    </li>
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="contact-avatar" id="current-chat-avatar" style="background: #4267B2;"></div>
+                <h2 id="current-chat-name">Select a contact</h2>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <p style="text-align: center; color: #666; margin-top: 50px;">Select a contact to start chatting</p>
+            </div>
+            <div class="chat-input">
+                <form id="message-form">
+                    <input type="hidden" id="recipient-id" value="">
+                    <textarea id="message-text" placeholder="Type a message..." disabled></textarea>
+                    <button type="submit" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/chat.js" defer></script>
 </body>
 </html>
